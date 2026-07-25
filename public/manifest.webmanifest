@@ -1,0 +1,12 @@
+{
+  "name": "BloodBridgeAI",
+  "short_name": "BloodBridge",
+  "description": "AI-powered emergency blood donor matching",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fef7f5",
+  "theme_color": "#c81f28",
+  "icons": [
+    { "src": "/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
