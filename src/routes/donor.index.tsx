@@ -60,7 +60,7 @@ function DonorDashboard() {
     if (donation) {
       toast.success(`Certificate ${donation.certificateId} ready.`);
       const hospital = hospitals.find((h) => h.id === donation.hospitalId);
-      generateCertificatePdf({ donor, hospital: hospital!, donation });
+      generateCertificatePdf({ donation, donorName: donor.name, hospitalName: hospital?.name ?? "" });
     }
   };
 
