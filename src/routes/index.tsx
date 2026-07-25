@@ -45,7 +45,9 @@ function Landing() {
   const lives = livesSaved(totalUnits) + donors.length * 3;
   const openReqs = requests.filter((r) => r.status === "open").length;
   const today = new Date();
-  const dateStr = today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const dateStr = `${DAYS[today.getDay()]}, ${today.getDate()} ${MONTHS[today.getMonth()]} ${today.getFullYear()}`;
 
   const roles: { role: Role; label: string; blurb: string }[] = [
     { role: "donor",    label: "Donor",    blurb: "See who needs your blood type nearby, and answer only when you can." },

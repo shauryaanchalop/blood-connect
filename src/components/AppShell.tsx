@@ -47,7 +47,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Top strip: date + issue + language */}
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2 text-[11px] tracking-wide text-muted-foreground">
           <span className="num">
-            {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            {(() => {
+              const d = new Date();
+              const M=["January","February","March","April","May","June","July","August","September","October","November","December"];
+              const W=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+              return `${W[d.getDay()]}, ${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;
+            })()}
           </span>
           <span className="hidden sm:inline">Vol. I · Emergency Blood Bureau · No. {new Date().getDate()}</span>
           <DropdownMenu>
