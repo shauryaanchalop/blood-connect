@@ -10,33 +10,115 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as HospitalIndexRouteImport } from './routes/hospital.index'
+import { Route as DonorIndexRouteImport } from './routes/donor.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as HospitalNewRequestRouteImport } from './routes/hospital.new-request'
+import { Route as DonorHistoryRouteImport } from './routes/donor.history'
+import { Route as HospitalRequestsIdRouteImport } from './routes/hospital.requests.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HospitalIndexRoute = HospitalIndexRouteImport.update({
+  id: '/hospital/',
+  path: '/hospital/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonorIndexRoute = DonorIndexRouteImport.update({
+  id: '/donor/',
+  path: '/donor/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HospitalNewRequestRoute = HospitalNewRequestRouteImport.update({
+  id: '/hospital/new-request',
+  path: '/hospital/new-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonorHistoryRoute = DonorHistoryRouteImport.update({
+  id: '/donor/history',
+  path: '/donor/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HospitalRequestsIdRoute = HospitalRequestsIdRouteImport.update({
+  id: '/hospital/requests/$id',
+  path: '/hospital/requests/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/donor/history': typeof DonorHistoryRoute
+  '/hospital/new-request': typeof HospitalNewRequestRoute
+  '/admin/': typeof AdminIndexRoute
+  '/donor/': typeof DonorIndexRoute
+  '/hospital/': typeof HospitalIndexRoute
+  '/hospital/requests/$id': typeof HospitalRequestsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/donor/history': typeof DonorHistoryRoute
+  '/hospital/new-request': typeof HospitalNewRequestRoute
+  '/admin': typeof AdminIndexRoute
+  '/donor': typeof DonorIndexRoute
+  '/hospital': typeof HospitalIndexRoute
+  '/hospital/requests/$id': typeof HospitalRequestsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/donor/history': typeof DonorHistoryRoute
+  '/hospital/new-request': typeof HospitalNewRequestRoute
+  '/admin/': typeof AdminIndexRoute
+  '/donor/': typeof DonorIndexRoute
+  '/hospital/': typeof HospitalIndexRoute
+  '/hospital/requests/$id': typeof HospitalRequestsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/donor/history'
+    | '/hospital/new-request'
+    | '/admin/'
+    | '/donor/'
+    | '/hospital/'
+    | '/hospital/requests/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/donor/history'
+    | '/hospital/new-request'
+    | '/admin'
+    | '/donor'
+    | '/hospital'
+    | '/hospital/requests/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/donor/history'
+    | '/hospital/new-request'
+    | '/admin/'
+    | '/donor/'
+    | '/hospital/'
+    | '/hospital/requests/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DonorHistoryRoute: typeof DonorHistoryRoute
+  HospitalNewRequestRoute: typeof HospitalNewRequestRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  DonorIndexRoute: typeof DonorIndexRoute
+  HospitalIndexRoute: typeof HospitalIndexRoute
+  HospitalRequestsIdRoute: typeof HospitalRequestsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +130,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hospital/': {
+      id: '/hospital/'
+      path: '/hospital'
+      fullPath: '/hospital/'
+      preLoaderRoute: typeof HospitalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/donor/': {
+      id: '/donor/'
+      path: '/donor'
+      fullPath: '/donor/'
+      preLoaderRoute: typeof DonorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hospital/new-request': {
+      id: '/hospital/new-request'
+      path: '/hospital/new-request'
+      fullPath: '/hospital/new-request'
+      preLoaderRoute: typeof HospitalNewRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/donor/history': {
+      id: '/donor/history'
+      path: '/donor/history'
+      fullPath: '/donor/history'
+      preLoaderRoute: typeof DonorHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hospital/requests/$id': {
+      id: '/hospital/requests/$id'
+      path: '/hospital/requests/$id'
+      fullPath: '/hospital/requests/$id'
+      preLoaderRoute: typeof HospitalRequestsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DonorHistoryRoute: DonorHistoryRoute,
+  HospitalNewRequestRoute: HospitalNewRequestRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  DonorIndexRoute: DonorIndexRoute,
+  HospitalIndexRoute: HospitalIndexRoute,
+  HospitalRequestsIdRoute: HospitalRequestsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
