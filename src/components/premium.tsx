@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
-import { Droplet } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { BloodType } from "@/lib/types";
 
-// Animated number counter
-export function CountUp({ to, duration = 1200, prefix = "", suffix = "" }: {
+// Animated number counter — tabular, restrained
+export function CountUp({ to, duration = 900, prefix = "", suffix = "" }: {
   to: number; duration?: number; prefix?: string; suffix?: string;
 }) {
   const [n, setN] = useState(0);
@@ -19,68 +18,78 @@ export function CountUp({ to, duration = 1200, prefix = "", suffix = "" }: {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [to, duration]);
-  return <span>{prefix}{n.toLocaleString()}{suffix}</span>;
+  return <span className="num">{prefix}{n.toLocaleString()}{suffix}</span>;
 }
 
-// Animated blood drop hero
+// Editorial "blood drop" — a hand-set red mark, not a glowing 3D orb
 export function BloodDropHero({ className = "" }: { className?: string }) {
   return (
-    <div className={`relative ${className}`}>
-      <div className="absolute inset-0 rounded-full bg-gradient-crimson blur-3xl opacity-40 animate-pulse-ring" />
-      <div className="absolute inset-8 rounded-full border border-primary/30 animate-pulse-ring" style={{ animationDelay: "0.4s" }} />
-      <div className="absolute inset-16 rounded-full border border-primary/20 animate-pulse-ring" style={{ animationDelay: "0.8s" }} />
-      <div className="relative flex h-full w-full items-center justify-center animate-heartbeat">
-        <div className="relative">
-          <Droplet className="h-32 w-32 fill-primary text-primary drop-shadow-[0_0_30px_oklch(0.72_0.26_22/0.6)]" strokeWidth={1} />
-          <div className="absolute left-1/2 top-1/3 h-8 w-2 -translate-x-1/2 rounded-full bg-gradient-to-b from-white/60 to-transparent blur-sm" />
-        </div>
-      </div>
-    </div>
+    <svg viewBox="0 0 200 260" className={className} aria-hidden>
+      <defs>
+        <pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="4" stroke="currentColor" strokeWidth="1" opacity="0.35" />
+        </pattern>
+      </defs>
+      <g className="text-oxblood" fill="currentColor">
+        <path d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z" />
+      </g>
+      <path
+        d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z"
+        fill="url(#hatch)"
+        className="text-paper"
+      />
+      <path
+        d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z"
+        fill="none" stroke="currentColor" strokeWidth="1.25" className="text-ink"
+      />
+      {/* Highlight — a hand-drawn crescent */}
+      <path d="M65 140 C 65 165, 75 185, 92 195" fill="none" stroke="var(--paper)" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
+    </svg>
   );
 }
 
-// AI match score ring
-export function MatchRing({ score, size = 96 }: { score: number; size?: number }) {
-  const r = (size - 12) / 2;
+// Match score — an editorial gauge, not a neon ring
+export function MatchRing({ score, size = 84 }: { score: number; size?: number }) {
+  const r = (size - 10) / 2;
   const c = 2 * Math.PI * r;
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    const t = setTimeout(() => setProgress(score), 100);
+    const t = setTimeout(() => setProgress(score), 60);
     return () => clearTimeout(t);
   }, [score]);
   const dash = c * (progress / 100);
-  const color = score >= 85 ? "oklch(0.82 0.15 82)" : score >= 65 ? "oklch(0.72 0.22 30)" : "oklch(0.65 0.15 40)";
   return (
-    <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+    <div className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size/2} cy={size/2} r={r} stroke="oklch(1 0 0 / 0.08)" strokeWidth="6" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="currentColor" className="text-ink/15" strokeWidth="2" fill="none" />
         <circle
-          cx={size/2} cy={size/2} r={r}
-          stroke={color} strokeWidth="6" fill="none" strokeLinecap="round"
+          cx={size / 2} cy={size / 2} r={r}
+          className="text-oxblood"
+          stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="butt"
           strokeDasharray={`${dash} ${c}`}
-          style={{ transition: "stroke-dasharray 1.2s cubic-bezier(0.2,0.8,0.2,1)", filter: `drop-shadow(0 0 6px ${color})` }}
+          style={{ transition: "stroke-dasharray 900ms cubic-bezier(0.2,0.7,0.2,1)" }}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-xl font-bold text-gradient">{Math.round(progress)}</div>
-        <div className="text-[9px] uppercase tracking-widest text-muted-foreground">match</div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+        <div className="serif text-2xl">{Math.round(progress)}</div>
+        <div className="mt-0.5 text-[8px] uppercase tracking-[0.25em] text-muted-foreground">match</div>
       </div>
     </div>
   );
 }
 
-// Pulse dot for live indicators
+// A single ink dot with a soft ring — used for "live"
 export function PulseDot({ className = "" }: { className?: string }) {
   return (
-    <span className={`relative inline-flex h-2 w-2 ${className}`}>
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-      <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+    <span className={`relative inline-flex h-1.5 w-1.5 ${className}`}>
+      <span className="absolute inline-flex h-full w-full animate-pulse-ring rounded-full bg-oxblood/40" />
+      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-oxblood" />
     </span>
   );
 }
 
-// Sparkline
-export function Sparkline({ data, color = "oklch(0.62 0.24 25)", height = 40, width = 120 }: {
+// Simple sparkline in ink
+export function Sparkline({ data, color, height = 36, width = 120 }: {
   data: number[]; color?: string; height?: number; width?: number;
 }) {
   if (data.length < 2) return null;
@@ -88,50 +97,44 @@ export function Sparkline({ data, color = "oklch(0.62 0.24 25)", height = 40, wi
   const min = Math.min(...data, 0);
   const range = max - min || 1;
   const step = width / (data.length - 1);
-  const points = data.map((v, i) => `${i * step},${height - ((v - min) / range) * height}`).join(" ");
+  const points = data.map((v, i) => `${i * step},${height - ((v - min) / range) * (height - 4) - 2}`).join(" ");
+  const stroke = color || "var(--oxblood)";
   return (
     <svg width={width} height={height} className="overflow-visible">
-      <defs>
-        <linearGradient id={`sp-${color}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <polygon points={`0,${height} ${points} ${width},${height}`} fill={`url(#sp-${color})`} />
+      <polyline points={points} fill="none" stroke={stroke} strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+      {data.map((v, i) => {
+        const cx = i * step;
+        const cy = height - ((v - min) / range) * (height - 4) - 2;
+        return <circle key={i} cx={cx} cy={cy} r="1.5" fill={stroke} />;
+      })}
     </svg>
   );
 }
 
-// Blood type crest — premium replacement for badge
-export function BloodCrest({ type, size = "md", glow = false }: {
+// Blood-type crest — a tidy typographic mark, not a gradient sphere
+export function BloodCrest({ type, size = "md" }: {
   type: BloodType; size?: "sm" | "md" | "lg"; glow?: boolean;
 }) {
-  const dims = size === "lg" ? "h-16 w-16 text-xl" : size === "sm" ? "h-8 w-8 text-[10px]" : "h-12 w-12 text-sm";
+  const dim = size === "lg" ? "h-14 w-14 text-lg" : size === "sm" ? "h-8 w-8 text-[11px]" : "h-11 w-11 text-sm";
   return (
-    <div className={`relative inline-flex ${dims} shrink-0 items-center justify-center rounded-xl bg-gradient-crimson font-black tracking-tight text-white ${glow ? "glow-primary" : ""}`}
-         style={{ boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.3), 0 8px 20px -6px oklch(0.62 0.24 25 / 0.5)" }}>
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-b from-white/20 to-transparent" />
-      <span className="relative">{type}</span>
-    </div>
+    <span className={`inline-flex ${dim} shrink-0 items-center justify-center rounded-full border border-ink bg-paper font-semibold tracking-tight text-oxblood`}>
+      {type}
+    </span>
   );
 }
 
-// Compact stat card
+// Stat cell — editorial datasheet, not a glass card
 export function StatCard({ label, value, sub, icon, accent }: {
-  label: string; value: React.ReactNode; sub?: React.ReactNode; icon?: React.ReactNode; accent?: "gold" | "crimson";
+  label: string; value: ReactNode; sub?: ReactNode; icon?: ReactNode; accent?: "gold" | "default";
 }) {
   return (
-    <div className="glass group relative overflow-hidden rounded-2xl p-5 transition-all hover:-translate-y-0.5">
-      <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full blur-2xl opacity-30 ${accent === "gold" ? "bg-[oklch(0.82_0.14_82)]" : "bg-primary"}`} />
-      <div className="relative flex items-start justify-between">
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{label}</div>
-          <div className={`mt-2 text-3xl font-bold ${accent === "gold" ? "text-gradient" : "text-gradient-crimson"}`}>{value}</div>
-          {sub && <div className="mt-1 text-xs text-muted-foreground">{sub}</div>}
-        </div>
-        {icon && <div className="text-primary/70">{icon}</div>}
+    <div className="paper-card p-5">
+      <div className="flex items-center justify-between text-muted-foreground">
+        <span className="kicker">{label}</span>
+        {icon && <span className={accent === "gold" ? "text-oxblood" : "text-ink/60"}>{icon}</span>}
       </div>
+      <div className="mt-2 serif text-4xl leading-none num">{value}</div>
+      {sub && <div className="mt-2 text-[11px] text-muted-foreground">{sub}</div>}
     </div>
   );
 }
