@@ -2,20 +2,23 @@ import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useCurrentUser, useStore } from "@/lib/store";
 import { AppShell } from "@/components/AppShell";
-import { BloodTypeBadge, UrgencyPill } from "@/components/blood";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UrgencyPill } from "@/components/blood";
+import { BloodCrest, MatchRing, PulseDot, StatCard, CountUp } from "@/components/premium";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, History } from "lucide-react";
+import { MapPin, Clock, History, Award, Flame, Droplet, TrendingUp, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { isCompatible } from "@/lib/types";
+import { matchScore, estimateDistanceKm, eta, livesSaved, daysSince } from "@/lib/ai";
+import { generateCertificatePdf } from "@/lib/certificate";
 
 export const Route = createFileRoute("/donor/")({
   head: () => ({
     meta: [
       { title: "Donor dashboard — BloodBridgeAI" },
-      { name: "description", content: "See open blood requests near you and respond to save lives." },
+      { name: "description", content: "See AI-matched blood requests near you and respond to save lives." },
       { property: "og:title", content: "Donor dashboard — BloodBridgeAI" },
-      { property: "og:description", content: "See open blood requests near you." },
+      { property: "og:description", content: "AI-matched blood requests near you." },
     ],
   }),
   component: DonorDashboard,
@@ -23,150 +26,164 @@ export const Route = createFileRoute("/donor/")({
 
 function DonorDashboard() {
   const user = useCurrentUser();
-  const { donors, hospitals, requests, respondToRequest } = useStore();
+  const { donors, hospitals, requests, donations, respondToRequest, completeDonation } = useStore();
   const { t } = useTranslation();
 
   if (!user) return <Navigate to="/" />;
   if (user.role !== "donor") return <Navigate to="/" />;
-
   const donor = donors.find((d) => d.userId === user.id);
   if (!donor) return <Navigate to="/" />;
 
-  const matches = requests.filter((r) => {
-    if (r.status !== "open") return false;
-    const hospital = hospitals.find((h) => h.id === r.hospitalId);
-    if (!hospital) return false;
-    const compatible = isDonorCompatible(donor.bloodType, r.bloodType);
-    return compatible && hospital.city === donor.city;
-  });
+  const myDonations = donations.filter((d) => d.donorId === donor.id);
+  const lives = livesSaved(donor.donationCount);
+  const daysSinceLast = daysSince(donor.lastDonation);
+  const eligible = daysSinceLast >= 56;
+
+  // AI-ranked matches (all cities, then sort)
+  const scored = requests
+    .filter((r) => r.status === "open" && isCompatible(donor.bloodType, r.bloodType))
+    .map((r) => {
+      const hospital = hospitals.find((h) => h.id === r.hospitalId)!;
+      return { r, hospital, score: matchScore(donor, r, hospital), dist: estimateDistanceKm(donor.id, hospital.id) };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const handleRespond = (rid: string, status: "accepted" | "declined") => {
+    respondToRequest(rid, donor.id, status);
+    toast[status === "accepted" ? "success" : "info"](
+      status === "accepted" ? "You're on the way — hospital notified." : "Response recorded.",
+    );
+  };
+
+  const handleComplete = (rid: string) => {
+    const donation = completeDonation(rid, donor.id);
+    if (donation) {
+      toast.success(`Certificate ${donation.certificateId} ready.`);
+      const hospital = hospitals.find((h) => h.id === donation.hospitalId);
+      generateCertificatePdf({ donation, donorName: donor.name, hospitalName: hospital?.name ?? "" });
+    }
+  };
 
   return (
     <AppShell>
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>{t("donor.profile")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <BloodTypeBadge type={donor.bloodType} />
-              <div>
-                <div className="font-medium">{donor.name}</div>
-                <div className="text-xs text-muted-foreground">{donor.phone}</div>
+      {/* Hero row */}
+      <div className="mb-8 grid gap-4 lg:grid-cols-4">
+        <div className="glass relative overflow-hidden rounded-2xl p-6 lg:col-span-2">
+          <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/30 blur-3xl" />
+          <div className="relative flex items-center gap-5">
+            <BloodCrest type={donor.bloodType} size="lg" glow />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Welcome back</div>
+              <h1 className="truncate text-2xl font-black tracking-tight text-gradient">{donor.name}</h1>
+              <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{donor.city}</span>
+                <span className="inline-flex items-center gap-1">
+                  <span className={`inline-flex h-1.5 w-1.5 rounded-full ${eligible ? "bg-[oklch(0.72_0.12_140)]" : "bg-[oklch(0.82_0.16_80)]"}`} />
+                  {eligible ? "Eligible to donate" : `Eligible in ${Math.max(56 - daysSinceLast, 0)}d`}
+                </span>
               </div>
             </div>
-            <Row label={t("donor.city")} value={donor.city} />
-            <Row label={t("donor.lastDonation")} value={donor.lastDonation ? new Date(donor.lastDonation).toLocaleDateString() : "—"} />
-            <Row label={t("donor.totalDonations")} value={String(donor.donationCount)} />
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/donor/history">
-                <History className="mr-2 h-4 w-4" />
-                {t("donor.viewHistory")}
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-
-        <div className="lg:col-span-2">
-          <h2 className="mb-3 text-lg font-semibold">{t("donor.openRequests")}</h2>
-          {matches.length === 0 ? (
-            <Card>
-              <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                {t("donor.noRequests")}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {matches.map((r) => {
-                const hospital = hospitals.find((h) => h.id === r.hospitalId)!;
-                const myResponse = r.responses.find((x) => x.donorId === donor.id);
-                const distance = Math.floor(2 + Math.random() * 8);
-                return (
-                  <Card key={r.id}>
-                    <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-start gap-3">
-                        <BloodTypeBadge type={r.bloodType} />
-                        <div>
-                          <div className="flex items-center gap-2 font-semibold">
-                            {hospital.name}
-                            <UrgencyPill urgency={r.urgency} />
-                          </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {hospital.city} · ~{distance} {t("common.distance")}
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {new Date(r.createdAt).toLocaleString()}
-                            </span>
-                            <span>
-                              {r.units} {t("hospital.units")} {t("hospital.bloodType").toLowerCase()}
-                            </span>
-                          </div>
-                          {r.note && <p className="mt-2 text-sm text-foreground/80">"{r.note}"</p>}
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        {myResponse ? (
-                          <Badge variant={myResponse.status === "accepted" ? "default" : "secondary"}>
-                            {myResponse.status === "accepted" ? t("donor.accepted") : t("donor.declined")}
-                          </Badge>
-                        ) : (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                respondToRequest(r.id, donor.id, "declined");
-                                toast.info(t("donor.declined"));
-                              }}
-                            >
-                              {t("donor.decline")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                respondToRequest(r.id, donor.id, "accepted");
-                                toast.success(t("donor.accepted"));
-                              }}
-                            >
-                              {t("donor.accept")}
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
+          </div>
         </div>
+        <StatCard label="Lives saved" value={<CountUp to={lives} />} sub="Est. WHO × 3" icon={<Award className="h-5 w-5" />} accent="gold" />
+        <StatCard label="Donations" value={<CountUp to={donor.donationCount} />} sub={<span className="inline-flex items-center gap-1"><Flame className="h-3 w-3 text-[oklch(0.82_0.14_82)]" /> streak of impact</span>} icon={<Droplet className="h-5 w-5" />} />
       </div>
+
+      {/* Matches */}
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-xl font-bold">
+            <PulseDot /> AI-matched requests
+          </h2>
+          <p className="text-sm text-muted-foreground">Ranked by compatibility, distance, and eligibility.</p>
+        </div>
+        <Button asChild variant="ghost" size="sm" className="rounded-full border border-border/60">
+          <Link to="/donor/history"><History className="mr-2 h-4 w-4" /> History</Link>
+        </Button>
+      </div>
+
+      {scored.length === 0 ? (
+        <div className="glass rounded-2xl py-16 text-center">
+          <Droplet className="mx-auto h-10 w-10 text-primary/40" />
+          <p className="mt-3 text-sm text-muted-foreground">No open requests match you right now.</p>
+          <p className="text-xs text-muted-foreground">We'll notify you the second one opens.</p>
+        </div>
+      ) : (
+        <div className="grid gap-4">
+          {scored.map(({ r, hospital, score, dist }) => {
+            const mine = r.responses.find((x) => x.donorId === donor.id);
+            return (
+              <div key={r.id} className="glass group relative overflow-hidden rounded-2xl p-5 transition-all hover:ring-glow">
+                <div className={`absolute left-0 top-0 h-full w-1 ${r.urgency === "critical" ? "bg-gradient-crimson" : r.urgency === "high" ? "bg-[oklch(0.82_0.16_80)]" : "bg-[oklch(0.68_0.14_200)]"}`} />
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex flex-1 items-center gap-4">
+                    <MatchRing score={score} />
+                    <BloodCrest type={r.bloodType} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="truncate font-bold">{hospital.name}</span>
+                        <UrgencyPill urgency={r.urgency} />
+                      </div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{hospital.city} · {dist.toFixed(1)} km · ~{eta(dist)}</span>
+                        <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(r.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                        <span className="inline-flex items-center gap-1"><TrendingUp className="h-3 w-3" />{r.units} unit{r.units > 1 ? "s" : ""} needed</span>
+                      </div>
+                      {r.note && <p className="mt-2 rounded-lg border border-border/60 bg-white/[0.03] px-3 py-1.5 text-xs italic text-foreground/80">"{r.note}"</p>}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {mine ? (
+                      mine.status === "accepted" ? (
+                        <>
+                          <Badge className="border-0 bg-[oklch(0.72_0.12_140)]/20 text-[oklch(0.85_0.15_140)]">
+                            <CheckCircle2 className="mr-1 h-3 w-3" /> Accepted
+                          </Badge>
+                          <Button size="sm" onClick={() => handleComplete(r.id)} className="rounded-full bg-gradient-gold text-black hover:opacity-90">
+                            <Award className="mr-1 h-3 w-3" /> Mark donated
+                          </Button>
+                        </>
+                      ) : (
+                        <Badge variant="secondary">Declined</Badge>
+                      )
+                    ) : (
+                      <>
+                        <Button size="sm" variant="ghost" onClick={() => handleRespond(r.id, "declined")} className="rounded-full">
+                          Not now
+                        </Button>
+                        <Button size="sm" onClick={() => handleRespond(r.id, "accepted")} className="rounded-full bg-gradient-crimson text-white glow-primary hover:opacity-90">
+                          Accept & save a life
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Recent donations mini */}
+      {myDonations.length > 0 && (
+        <div className="mt-10">
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">Recent donations</h3>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {myDonations.slice(0, 4).map((d) => (
+              <div key={d.id} className="glass flex items-center justify-between rounded-xl p-3 text-sm">
+                <div className="flex items-center gap-3">
+                  <BloodCrest type={d.bloodType} size="sm" />
+                  <div>
+                    <div className="font-medium">{hospitals.find((h) => h.id === d.hospitalId)?.name}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(d.date).toLocaleDateString()}</div>
+                  </div>
+                </div>
+                <div className="text-xs font-mono text-[oklch(0.82_0.14_82)]">{d.certificateId}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
-    </div>
-  );
-}
-
-function isDonorCompatible(donor: string, recipient: string) {
-  const map: Record<string, string[]> = {
-    "O-": ["O-", "O+", "A-", "A+", "B-", "B+", "AB-", "AB+"],
-    "O+": ["O+", "A+", "B+", "AB+"],
-    "A-": ["A-", "A+", "AB-", "AB+"],
-    "A+": ["A+", "AB+"],
-    "B-": ["B-", "B+", "AB-", "AB+"],
-    "B+": ["B+", "AB+"],
-    "AB-": ["AB-", "AB+"],
-    "AB+": ["AB+"],
-  };
-  return map[donor]?.includes(recipient) ?? false;
 }
