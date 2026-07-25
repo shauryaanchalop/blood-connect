@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Globe, LogOut, Droplet } from "lucide-react";
+import { Bell, Globe, LogOut } from "lucide-react";
 import type { Lang } from "@/lib/types";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -38,81 +38,103 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? [{ to: "/admin", label: t("nav.dashboard") }]
     : [];
 
+  const roleLabel = user?.role === "donor" ? "Donor" : user?.role === "hospital" ? "Hospital" : user?.role === "admin" ? "Bureau" : "";
+
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/60 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/30 blur-md" />
-              <Droplet className="relative h-6 w-6 fill-primary text-primary animate-heartbeat" strokeWidth={1.5} />
-            </div>
-            <span className="hidden font-black tracking-tight sm:inline">
-              <span className="text-gradient-crimson">Blood</span>
-              <span className="text-gradient">Bridge</span>
-              <span className="ml-0.5 text-[10px] font-bold text-[oklch(0.82_0.14_82)]">AI</span>
+      {/* Editorial masthead */}
+      <header className="border-b border-ink/20">
+        {/* Top strip: date + issue + language */}
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2 text-[11px] tracking-wide text-muted-foreground">
+          <span className="num">
+            {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          </span>
+          <span className="hidden sm:inline">Vol. I · Emergency Blood Bureau · No. {new Date().getDate()}</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="inline-flex items-center gap-1.5 uppercase tracking-[0.2em] hover:text-foreground">
+                <Globe className="h-3 w-3" /> {lang}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => changeLang("en")}>English</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLang("hi")}>हिन्दी</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => changeLang("es")}>Español</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Wordmark + user chip */}
+        <div className="mx-auto flex max-w-6xl items-end justify-between gap-4 border-t border-ink/20 px-6 py-4">
+          <Link to="/" className="group flex items-baseline gap-3">
+            <span className="serif text-3xl leading-none tracking-tight sm:text-4xl">
+              BloodBridge
+              <span className="ml-0.5 italic text-oxblood">.</span>
+            </span>
+            <span className="hidden text-[10px] uppercase tracking-[0.3em] text-muted-foreground sm:inline">
+              An emergency donor register
             </span>
           </Link>
-          <nav className="ml-4 flex flex-1 gap-1 overflow-x-auto">
+
+          <div className="flex items-center gap-3">
+            {user && (
+              <>
+                <div className="hidden text-right text-[11px] leading-tight sm:block">
+                  <div className="uppercase tracking-[0.2em] text-muted-foreground">{roleLabel}</div>
+                  <div className="font-medium">{user.name}</div>
+                </div>
+                <button
+                  className="relative rounded-full p-1.5 hover:bg-ink/5"
+                  onClick={() => markAllRead(user.id)}
+                  aria-label="Notifications"
+                >
+                  <Bell className="h-4 w-4" />
+                  {unread > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-oxblood px-1 text-[9px] font-semibold text-primary-foreground num">
+                      {unread}
+                    </span>
+                  )}
+                </button>
+                <button className="rounded-full p-1.5 hover:bg-ink/5" onClick={signOut} aria-label="Sign out">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Section nav — tab underline */}
+        {navItems.length > 0 && (
+          <nav className="mx-auto flex max-w-6xl items-center gap-6 border-t border-ink/20 px-6 text-[13px]">
             {navItems.map((item) => {
               const active = pathname === item.to;
               return (
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`relative whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                  className={`relative -mb-px py-2.5 tracking-wide transition-colors ${
                     active
-                      ? "bg-gradient-crimson text-white shadow-[0_8px_24px_-8px_oklch(0.62_0.24_25/0.6)]"
-                      : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {item.label}
+                  {active && <span className="absolute inset-x-0 -bottom-px h-0.5 bg-oxblood" />}
                 </Link>
               );
             })}
           </nav>
-
-          {user && (
-            <Button
-              variant="ghost" size="icon" className="relative"
-              onClick={() => markAllRead(user.id)} aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-              {unread > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-crimson px-1 text-[10px] font-bold text-white glow-primary">
-                  {unread}
-                </span>
-              )}
-            </Button>
-          )}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Language">
-                <Globe className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="glass">
-              <DropdownMenuItem onClick={() => changeLang("en")}>English</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeLang("hi")}>हिन्दी</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeLang("es")}>Español</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {user && (
-            <>
-              <div className="hidden items-center gap-2 rounded-full border border-border/60 bg-white/5 px-3 py-1 text-xs sm:flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.82_0.14_82)]" />
-                {user.name}
-              </div>
-              <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
+        )}
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-8">{children}</main>
+
+      <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
+
+      <footer className="mx-auto mt-16 max-w-6xl border-t border-ink/20 px-6 py-6 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>BloodBridge · Emergency Blood Bureau</span>
+          <span className="num">Est. {new Date().getFullYear()} · Printed digitally</span>
+        </div>
+      </footer>
     </div>
   );
 }
