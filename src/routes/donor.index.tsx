@@ -125,8 +125,20 @@ function DonorDashboard() {
                 <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{donor.city}</span>
                 <span className="inline-flex items-center gap-1">
                   <span className={`inline-flex h-1.5 w-1.5 rounded-full ${eligible ? "bg-[oklch(0.72_0.12_140)]" : "bg-[oklch(0.82_0.16_80)]"}`} />
-                  {eligible ? "Eligible to donate" : `Eligible in ${Math.max(56 - daysSinceLast, 0)}d`}
+                  {eligible ? "Eligible to donate" : `Eligible in ${daysToEligible}d`}
                 </span>
+                <button
+                  onClick={toggleAvailability}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    donor.available !== false
+                      ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                      : "border-border bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                  aria-pressed={donor.available !== false}
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  SMS {donor.available !== false ? "on" : "off"}
+                </button>
               </div>
             </div>
           </div>
