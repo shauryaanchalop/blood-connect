@@ -191,7 +191,8 @@ function DonorDashboard() {
           <p className="text-xs text-muted-foreground">We'll notify you the second one opens.</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid max-h-[560px] gap-4 overflow-y-auto rounded-2xl pr-1 [scrollbar-width:thin]">
+
           {scored.map(({ r, hospital, score, dist }) => {
             const mine = r.responses.find((x) => x.donorId === donor.id);
             return (
