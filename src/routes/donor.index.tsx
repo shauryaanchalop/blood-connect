@@ -1,15 +1,17 @@
 import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useEffect, useRef, useState } from "react";
 import { useCurrentUser, useStore } from "@/lib/store";
 import { AppShell } from "@/components/AppShell";
 import { UrgencyPill } from "@/components/blood";
 import { BloodCrest, MatchRing, PulseDot, StatCard, CountUp } from "@/components/premium";
 import { MiniMap } from "@/components/MiniMap";
+import { CompatibilityModal } from "@/components/CompatibilityModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, History, Award, Flame, Droplet, TrendingUp, CheckCircle2 } from "lucide-react";
+import { MapPin, Clock, History, Award, Flame, Droplet, TrendingUp, CheckCircle2, Info, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
-import { isCompatible } from "@/lib/types";
+import { isCompatible, type BloodRequest } from "@/lib/types";
 import { matchScore, estimateDistanceKm, eta, livesSaved, daysSince } from "@/lib/ai";
 import { generateCertificatePdf } from "@/lib/certificate";
 
