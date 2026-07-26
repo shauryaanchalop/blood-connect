@@ -113,18 +113,23 @@ export function AppShell({ children }: { children: ReactNode }) {
               {roleLabel} workspace
             </div>
             {navItems.map((item) => {
-              const active = pathname === item.to;
+              const active = !!item.to && pathname === item.to;
               const Icon = item.icon;
+              const cls = `group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-all ${
+                active
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                  : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`;
+              if (item.onClick) {
+                return (
+                  <button key={item.label} onClick={item.onClick} className={cls}>
+                    <Icon className="h-4 w-4" />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                );
+              }
               return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all ${
-                    active
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  }`}
-                >
+                <Link key={item.to!} to={item.to!} className={cls}>
                   <Icon className="h-4 w-4" />
                   <span className="font-medium">{item.label}</span>
                 </Link>
