@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useStore } from "@/lib/store";
 import { Github, Linkedin, Mail, Trophy, Droplet, Sparkles, GraduationCap, Crown } from "lucide-react";
+
 
 type Member = {
   name: string;
