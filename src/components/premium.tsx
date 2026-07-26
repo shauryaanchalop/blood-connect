@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { BloodType } from "@/lib/types";
 
-// Animated number counter — tabular, restrained
+// Animated number counter
 export function CountUp({ to, duration = 900, prefix = "", suffix = "" }: {
   to: number; duration?: number; prefix?: string; suffix?: string;
 }) {
@@ -21,34 +21,35 @@ export function CountUp({ to, duration = 900, prefix = "", suffix = "" }: {
   return <span className="num">{prefix}{n.toLocaleString()}{suffix}</span>;
 }
 
-// Editorial "blood drop" — a hand-set red mark, not a glowing 3D orb
+// Modern blood drop with gradient + heartbeat
 export function BloodDropHero({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 260" className={className} aria-hidden>
       <defs>
-        <pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-          <line x1="0" y1="0" x2="0" y2="4" stroke="currentColor" strokeWidth="1" opacity="0.35" />
-        </pattern>
+        <linearGradient id="drop-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="oklch(0.68 0.24 25)" />
+          <stop offset="100%" stopColor="oklch(0.42 0.20 25)" />
+        </linearGradient>
+        <radialGradient id="drop-highlight" cx="35%" cy="60%" r="30%">
+          <stop offset="0%" stopColor="white" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="white" stopOpacity="0" />
+        </radialGradient>
       </defs>
-      <g className="text-oxblood" fill="currentColor">
-        <path d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z" />
+      <g className="animate-heartbeat" style={{ transformOrigin: "100px 130px" }}>
+        <path
+          d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z"
+          fill="url(#drop-grad)"
+        />
+        <path
+          d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z"
+          fill="url(#drop-highlight)"
+        />
       </g>
-      <path
-        d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z"
-        fill="url(#hatch)"
-        className="text-paper"
-      />
-      <path
-        d="M100 10 C 100 10, 30 110, 30 170 A 70 70 0 0 0 170 170 C 170 110, 100 10, 100 10 Z"
-        fill="none" stroke="currentColor" strokeWidth="1.25" className="text-ink"
-      />
-      {/* Highlight — a hand-drawn crescent */}
-      <path d="M65 140 C 65 165, 75 185, 92 195" fill="none" stroke="var(--paper)" strokeWidth="3" strokeLinecap="round" opacity="0.7" />
     </svg>
   );
 }
 
-// Match score — an editorial gauge, not a neon ring
+// Match score ring — clean modern gauge
 export function MatchRing({ score, size = 84 }: { score: number; size?: number }) {
   const r = (size - 10) / 2;
   const c = 2 * Math.PI * r;
@@ -61,34 +62,32 @@ export function MatchRing({ score, size = 84 }: { score: number; size?: number }
   return (
     <div className="relative inline-flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="currentColor" className="text-ink/15" strokeWidth="2" fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="currentColor" className="text-muted" strokeWidth="6" fill="none" />
         <circle
           cx={size / 2} cy={size / 2} r={r}
-          className="text-oxblood"
-          stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="butt"
+          className="text-primary"
+          stroke="currentColor" strokeWidth="6" fill="none" strokeLinecap="round"
           strokeDasharray={`${dash} ${c}`}
           style={{ transition: "stroke-dasharray 900ms cubic-bezier(0.2,0.7,0.2,1)" }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center leading-none">
-        <div className="serif text-2xl">{Math.round(progress)}</div>
+        <div className="display text-xl font-bold">{Math.round(progress)}</div>
         <div className="mt-0.5 text-[8px] uppercase tracking-[0.25em] text-muted-foreground">match</div>
       </div>
     </div>
   );
 }
 
-// A single ink dot with a soft ring — used for "live"
 export function PulseDot({ className = "" }: { className?: string }) {
   return (
-    <span className={`relative inline-flex h-1.5 w-1.5 ${className}`}>
-      <span className="absolute inline-flex h-full w-full animate-pulse-ring rounded-full bg-oxblood/40" />
-      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-oxblood" />
+    <span className={`relative inline-flex h-2 w-2 ${className}`}>
+      <span className="absolute inline-flex h-full w-full animate-pulse-ring rounded-full bg-primary/50" />
+      <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
     </span>
   );
 }
 
-// Simple sparkline in ink
 export function Sparkline({ data, color, height = 36, width = 120 }: {
   data: number[]; color?: string; height?: number; width?: number;
 }) {
@@ -98,43 +97,44 @@ export function Sparkline({ data, color, height = 36, width = 120 }: {
   const range = max - min || 1;
   const step = width / (data.length - 1);
   const points = data.map((v, i) => `${i * step},${height - ((v - min) / range) * (height - 4) - 2}`).join(" ");
-  const stroke = color || "var(--oxblood)";
+  const stroke = color || "var(--primary)";
+  const area = `0,${height} ${points} ${width},${height}`;
   return (
     <svg width={width} height={height} className="overflow-visible">
-      <polyline points={points} fill="none" stroke={stroke} strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
-      {data.map((v, i) => {
-        const cx = i * step;
-        const cy = height - ((v - min) / range) * (height - 4) - 2;
-        return <circle key={i} cx={cx} cy={cy} r="1.5" fill={stroke} />;
-      })}
+      <polygon points={area} fill={stroke} opacity="0.12" />
+      <polyline points={points} fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-// Blood-type crest — a tidy typographic mark, not a gradient sphere
-export function BloodCrest({ type, size = "md" }: {
+// Blood-type crest — modern pill
+export function BloodCrest({ type, size = "md", glow = false }: {
   type: BloodType; size?: "sm" | "md" | "lg"; glow?: boolean;
 }) {
   const dim = size === "lg" ? "h-14 w-14 text-lg" : size === "sm" ? "h-8 w-8 text-[11px]" : "h-11 w-11 text-sm";
   return (
-    <span className={`inline-flex ${dim} shrink-0 items-center justify-center rounded-full border border-ink bg-paper font-semibold tracking-tight text-oxblood`}>
+    <span className={`inline-flex ${dim} shrink-0 items-center justify-center rounded-full bg-gradient-crimson font-bold tracking-tight ${glow ? "glow-primary" : ""}`}>
       {type}
     </span>
   );
 }
 
-// Stat cell — editorial datasheet, not a glass card
+// Stat card — modern
 export function StatCard({ label, value, sub, icon, accent }: {
   label: string; value: ReactNode; sub?: ReactNode; icon?: ReactNode; accent?: "gold" | "default";
 }) {
   return (
-    <div className="paper-card p-5">
+    <div className="glass p-5">
       <div className="flex items-center justify-between text-muted-foreground">
-        <span className="kicker">{label}</span>
-        {icon && <span className={accent === "gold" ? "text-oxblood" : "text-ink/60"}>{icon}</span>}
+        <span className="text-[11px] font-medium uppercase tracking-[0.18em]">{label}</span>
+        {icon && (
+          <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${accent === "gold" ? "bg-primary/10 text-primary" : "bg-muted text-foreground/70"}`}>
+            {icon}
+          </span>
+        )}
       </div>
-      <div className="mt-2 serif text-4xl leading-none num">{value}</div>
-      {sub && <div className="mt-2 text-[11px] text-muted-foreground">{sub}</div>}
+      <div className="mt-3 display text-3xl font-bold leading-none num">{value}</div>
+      {sub && <div className="mt-2 text-xs text-muted-foreground">{sub}</div>}
     </div>
   );
 }
