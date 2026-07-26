@@ -9,14 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as EducationRouteImport } from './routes/education'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HospitalIndexRouteImport } from './routes/hospital.index'
 import { Route as DonorIndexRouteImport } from './routes/donor.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as HospitalNewRequestRouteImport } from './routes/hospital.new-request'
+import { Route as DonorRegisterRouteImport } from './routes/donor.register'
+import { Route as DonorProfileRouteImport } from './routes/donor.profile'
 import { Route as DonorHistoryRouteImport } from './routes/donor.history'
 import { Route as HospitalRequestsIdRouteImport } from './routes/hospital.requests.$id'
 
+const EducationRoute = EducationRouteImport.update({
+  id: '/education',
+  path: '/education',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -42,6 +50,16 @@ const HospitalNewRequestRoute = HospitalNewRequestRouteImport.update({
   path: '/hospital/new-request',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DonorRegisterRoute = DonorRegisterRouteImport.update({
+  id: '/donor/register',
+  path: '/donor/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonorProfileRoute = DonorProfileRouteImport.update({
+  id: '/donor/profile',
+  path: '/donor/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DonorHistoryRoute = DonorHistoryRouteImport.update({
   id: '/donor/history',
   path: '/donor/history',
@@ -55,7 +73,10 @@ const HospitalRequestsIdRoute = HospitalRequestsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/education': typeof EducationRoute
   '/donor/history': typeof DonorHistoryRoute
+  '/donor/profile': typeof DonorProfileRoute
+  '/donor/register': typeof DonorRegisterRoute
   '/hospital/new-request': typeof HospitalNewRequestRoute
   '/admin/': typeof AdminIndexRoute
   '/donor/': typeof DonorIndexRoute
@@ -64,7 +85,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/education': typeof EducationRoute
   '/donor/history': typeof DonorHistoryRoute
+  '/donor/profile': typeof DonorProfileRoute
+  '/donor/register': typeof DonorRegisterRoute
   '/hospital/new-request': typeof HospitalNewRequestRoute
   '/admin': typeof AdminIndexRoute
   '/donor': typeof DonorIndexRoute
@@ -74,7 +98,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/education': typeof EducationRoute
   '/donor/history': typeof DonorHistoryRoute
+  '/donor/profile': typeof DonorProfileRoute
+  '/donor/register': typeof DonorRegisterRoute
   '/hospital/new-request': typeof HospitalNewRequestRoute
   '/admin/': typeof AdminIndexRoute
   '/donor/': typeof DonorIndexRoute
@@ -85,7 +112,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/education'
     | '/donor/history'
+    | '/donor/profile'
+    | '/donor/register'
     | '/hospital/new-request'
     | '/admin/'
     | '/donor/'
@@ -94,7 +124,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/education'
     | '/donor/history'
+    | '/donor/profile'
+    | '/donor/register'
     | '/hospital/new-request'
     | '/admin'
     | '/donor'
@@ -103,7 +136,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/education'
     | '/donor/history'
+    | '/donor/profile'
+    | '/donor/register'
     | '/hospital/new-request'
     | '/admin/'
     | '/donor/'
@@ -113,7 +149,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EducationRoute: typeof EducationRoute
   DonorHistoryRoute: typeof DonorHistoryRoute
+  DonorProfileRoute: typeof DonorProfileRoute
+  DonorRegisterRoute: typeof DonorRegisterRoute
   HospitalNewRequestRoute: typeof HospitalNewRequestRoute
   AdminIndexRoute: typeof AdminIndexRoute
   DonorIndexRoute: typeof DonorIndexRoute
@@ -123,6 +162,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/education': {
+      id: '/education'
+      path: '/education'
+      fullPath: '/education'
+      preLoaderRoute: typeof EducationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -158,6 +204,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HospitalNewRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/donor/register': {
+      id: '/donor/register'
+      path: '/donor/register'
+      fullPath: '/donor/register'
+      preLoaderRoute: typeof DonorRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/donor/profile': {
+      id: '/donor/profile'
+      path: '/donor/profile'
+      fullPath: '/donor/profile'
+      preLoaderRoute: typeof DonorProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/donor/history': {
       id: '/donor/history'
       path: '/donor/history'
@@ -177,7 +237,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EducationRoute: EducationRoute,
   DonorHistoryRoute: DonorHistoryRoute,
+  DonorProfileRoute: DonorProfileRoute,
+  DonorRegisterRoute: DonorRegisterRoute,
   HospitalNewRequestRoute: HospitalNewRequestRoute,
   AdminIndexRoute: AdminIndexRoute,
   DonorIndexRoute: DonorIndexRoute,
