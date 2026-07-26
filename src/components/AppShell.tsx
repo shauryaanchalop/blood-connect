@@ -1,7 +1,8 @@
 import { Link, useRouterState, useNavigate, useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useCurrentUser, useStore } from "@/lib/store";
+import { TeamDialog } from "@/components/TeamDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,22 +10,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet, User as UserIcon, BookOpen, ArrowLeft, Users,
+  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet, User as UserIcon, BookOpen, ArrowLeft, Users, Sun, Moon,
 } from "lucide-react";
 import type { Lang } from "@/lib/types";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { i18n, t } = useTranslation();
   const user = useCurrentUser();
-  const { lang, setLang, notifications, markAllRead } = useStore();
+  const { lang, setLang, notifications, markAllRead, theme, toggleTheme, setTeamOpen } = useStore();
   const navigate = useNavigate();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const canGoBack = typeof window !== "undefined" && window.history.length > 1;
+
+  // Track history length after mount so back button state is correct on hydration.
+  const [historyLen, setHistoryLen] = useState(1);
+  useEffect(() => {
+    setHistoryLen(window.history.length);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof i18n?.changeLanguage === "function" && i18n.language !== lang) i18n.changeLanguage(lang);
   }, [lang, i18n]);
+
+  // Apply theme class to <html>
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") root.classList.add("dark");
+    else root.classList.remove("dark");
+  }, [theme]);
 
   const unread = user ? notifications.filter((n) => n.userId === user.id && !n.read).length : 0;
   const signOut = () => {
@@ -32,7 +45,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     navigate({ to: "/" });
   };
 
-  type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
+  const goBack = () => {
+    // Smart back: prefer real history; otherwise, hop to a sensible parent.
+    if (historyLen > 1) {
+      router.history.back();
+      return;
+    }
+    // Compute a sensible fallback based on the current path.
+    const p = pathname;
+    if (p.startsWith("/donor/")) return navigate({ to: "/donor" });
+    if (p.startsWith("/hospital/requests")) return navigate({ to: "/hospital" });
+    if (p.startsWith("/hospital/")) return navigate({ to: "/hospital" });
+    if (user?.role === "donor") return navigate({ to: "/donor" });
+    if (user?.role === "hospital") return navigate({ to: "/hospital" });
+    if (user?.role === "admin") return navigate({ to: "/admin" });
+    return navigate({ to: "/" });
+  };
+
+  type NavItem = { to?: string; label: string; icon: typeof LayoutDashboard; onClick?: () => void };
   const navItems: NavItem[] =
     user?.role === "donor"
       ? [
@@ -54,8 +84,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         ]
       : [];
 
-  // Team link is available for every signed-in role
-  if (user) navItems.push({ to: "/team", label: "Team", icon: Users });
+  // Team opens the modal instead of navigating
+  if (user) navItems.push({ label: "Team", icon: Users, onClick: () => setTeamOpen(true) });
 
   const roleLabel =
     user?.role === "donor" ? "Donor" : user?.role === "hospital" ? "Hospital" : user?.role === "admin" ? "Admin" : "";
@@ -83,18 +113,23 @@ export function AppShell({ children }: { children: ReactNode }) {
               {roleLabel} workspace
             </div>
             {navItems.map((item) => {
-              const active = pathname === item.to;
+              const active = !!item.to && pathname === item.to;
               const Icon = item.icon;
+              const cls = `group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-left transition-all ${
+                active
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                  : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`;
+              if (item.onClick) {
+                return (
+                  <button key={item.label} onClick={item.onClick} className={cls}>
+                    <Icon className="h-4 w-4" />
+                    <span className="font-medium">{item.label}</span>
+                  </button>
+                );
+              }
               return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all ${
-                    active
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  }`}
-                >
+                <Link key={item.to!} to={item.to!} className={cls}>
                   <Icon className="h-4 w-4" />
                   <span className="font-medium">{item.label}</span>
                 </Link>
@@ -130,7 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex min-w-0 items-center gap-2">
               {/* Back button */}
               <button
-                onClick={() => (canGoBack ? router.history.back() : navigate({ to: "/" }))}
+                onClick={goBack}
                 className="inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9"
                 aria-label="Go back"
               >
@@ -168,6 +203,15 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuContent>
               </DropdownMenu>
 
+              <button
+                onClick={toggleTheme}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                title={theme === "dark" ? "Light mode" : "Dark mode"}
+              >
+                {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+
               {user && (
                 <button
                   className="relative rounded-full border border-border bg-card p-2 hover:text-foreground"
@@ -204,17 +248,26 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <div className="mx-auto flex max-w-md items-stretch justify-around">
                 {navItems.map((item) => {
-                  const active = pathname === item.to;
+                  const active = !!item.to && pathname === item.to;
                   const Icon = item.icon;
+                  const cls = `flex min-h-14 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`;
+                  if (item.onClick) {
+                    return (
+                      <button key={item.label} onClick={item.onClick} aria-label={item.label} className={cls}>
+                        <Icon className="h-5 w-5" strokeWidth={2} />
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    );
+                  }
                   return (
                     <Link
-                      key={item.to}
-                      to={item.to}
+                      key={item.to!}
+                      to={item.to!}
                       aria-label={item.label}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-14 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
-                        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                      }`}
+                      className={cls}
                     >
                       <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
                       <span className="truncate">{item.label}</span>
@@ -227,6 +280,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         </div>
       </div>
+      <TeamDialog />
     </div>
   );
 }
