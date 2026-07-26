@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CountUp, PulseDot } from "@/components/premium";
 import { livesSaved } from "@/lib/ai";
+import { TeamDialog } from "@/components/TeamDialog";
 
 export const Route = createFileRoute("/")({
   head: () => ({
