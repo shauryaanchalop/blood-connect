@@ -18,7 +18,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const user = useCurrentUser();
   const { lang, setLang, notifications, markAllRead } = useStore();
   const navigate = useNavigate();
+  const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const canGoBack = typeof window !== "undefined" && window.history.length > 1;
 
   useEffect(() => {
     if (i18n.language !== lang) i18n.changeLanguage(lang);
