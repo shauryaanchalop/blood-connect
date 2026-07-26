@@ -54,6 +54,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         ]
       : [];
 
+  // Team link is available for every signed-in role
+  if (user) navItems.push({ to: "/team", label: "Team", icon: Users });
+
   const roleLabel =
     user?.role === "donor" ? "Donor" : user?.role === "hospital" ? "Hospital" : user?.role === "admin" ? "Admin" : "";
   const initials = user?.name
