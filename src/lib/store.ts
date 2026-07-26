@@ -33,6 +33,14 @@ interface State {
   updateDonor: (donorId: string, patch: Partial<Donor>) => void;
   updateHospital: (hospitalId: string, patch: Partial<Hospital>) => void;
 
+  registerDonor: (input: {
+    name: string;
+    bloodType: BloodType;
+    city: string;
+    phone: string;
+    age?: number;
+  }) => { user: User; donor: Donor };
+
   createRequest: (input: {
     hospitalId: string;
     bloodType: BloodType;
