@@ -29,8 +29,10 @@ export const Route = createFileRoute("/donor/")({
 
 function DonorDashboard() {
   const user = useCurrentUser();
-  const { donors, hospitals, requests, donations, respondToRequest, completeDonation } = useStore();
+  const { donors, hospitals, requests, donations, respondToRequest, completeDonation, notify, updateDonor } = useStore();
   const { t } = useTranslation();
+  const [selected, setSelected] = useState<BloodRequest | null>(null);
+  const smsShownRef = useRef(false);
 
   if (!user) return <Navigate to="/" />;
   if (user.role !== "donor") return <Navigate to="/" />;
@@ -41,6 +43,30 @@ function DonorDashboard() {
   const lives = livesSaved(donor.donationCount);
   const daysSinceLast = daysSince(donor.lastDonation);
   const eligible = daysSinceLast >= 56;
+  const daysToEligible = Math.max(56 - daysSinceLast, 0);
+
+  // Mock SMS reminders — fire once per session
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (smsShownRef.current) return;
+    if (donor.reminderEnabled === false) return;
+    const timer = setTimeout(() => {
+      if (!eligible && daysToEligible <= 14 && daysToEligible > 0) {
+        toast.message("📱 SMS reminder", {
+          description: `Hi ${donor.name.split(" ")[0]}, you'll be eligible to donate again in ${daysToEligible} day${daysToEligible === 1 ? "" : "s"}. Reply STOP to opt out.`,
+          duration: 6000,
+        });
+        notify(donor.userId, `SMS: Eligible to donate in ${daysToEligible} days.`);
+      } else if (eligible && donor.donationCount > 0) {
+        toast.message("📱 SMS reminder", {
+          description: `Hi ${donor.name.split(" ")[0]}, you're eligible to donate again. Save a life this week.`,
+          duration: 6000,
+        });
+      }
+      smsShownRef.current = true;
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [donor.userId, donor.name, donor.reminderEnabled, donor.donationCount, eligible, daysToEligible, notify]);
 
   // AI-ranked matches (all cities, then sort)
   const scored = requests
@@ -53,18 +79,35 @@ function DonorDashboard() {
 
   const handleRespond = (rid: string, status: "accepted" | "declined") => {
     respondToRequest(rid, donor.id, status);
-    toast[status === "accepted" ? "success" : "info"](
-      status === "accepted" ? "You're on the way — hospital notified." : "Response recorded.",
-    );
+    if (status === "accepted") {
+      const req = requests.find((r) => r.id === rid);
+      const hosp = req && hospitals.find((h) => h.id === req.hospitalId);
+      toast.success("You're on the way — hospital notified.", {
+        description: hosp ? `📱 SMS sent to ${hosp.name}: "${donor.name} is en route with ${donor.bloodType}."` : undefined,
+      });
+    } else {
+      toast.info("Response recorded.");
+    }
+    setSelected(null);
   };
 
   const handleComplete = (rid: string) => {
     const donation = completeDonation(rid, donor.id);
     if (donation) {
-      toast.success(`Certificate ${donation.certificateId} ready.`);
+      toast.success(`Certificate ${donation.certificateId} ready.`, { description: "Downloading your PDF…" });
       const hospital = hospitals.find((h) => h.id === donation.hospitalId);
       generateCertificatePdf({ donation, donorName: donor.name, hospitalName: hospital?.name ?? "" });
     }
+  };
+
+  const toggleAvailability = () => {
+    const next = !(donor.available !== false);
+    updateDonor(donor.id, { available: next });
+    toast.message("📱 SMS reminder", {
+      description: next
+        ? `Availability turned ON. We'll SMS you the moment a compatible request opens near ${donor.city}.`
+        : "Availability paused. You won't receive SMS alerts until you turn it back on.",
+    });
   };
 
   return (
