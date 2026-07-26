@@ -280,6 +280,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         </div>
       </div>
+      <TeamDialog />
     </div>
   );
 }
