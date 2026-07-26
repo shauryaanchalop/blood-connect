@@ -183,36 +183,48 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </button>
               )}
 
-              {/* Mobile nav */}
-              {navItems.length > 0 && (
-                <div className="flex items-center gap-1 md:hidden">
-                  {navItems.map((item) => {
-                    const active = pathname === item.to;
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        aria-label={item.label}
-                        className={`rounded-full p-2 ${active ? "bg-primary text-primary-foreground" : "border border-border bg-card text-muted-foreground"}`}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </header>
 
-          <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10">{children}</main>
+          <main className="mx-auto max-w-7xl px-4 pb-24 pt-6 md:px-8 md:py-10 md:pb-10">{children}</main>
 
-          <footer className="mx-auto max-w-7xl px-4 py-8 text-[11px] text-muted-foreground md:px-8">
+          <footer className="mx-auto max-w-7xl px-4 pb-24 text-[11px] text-muted-foreground md:px-8 md:pb-8">
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-6">
               <span className="font-medium">BloodBridge · AI Emergency Blood Network</span>
               <span className="num">© {new Date().getFullYear()}</span>
             </div>
           </footer>
+
+          {/* Mobile bottom nav */}
+          {navItems.length > 0 && (
+            <nav
+              aria-label="Primary"
+              className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-lg md:hidden"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            >
+              <div className="mx-auto flex max-w-md items-stretch justify-around">
+                {navItems.map((item) => {
+                  const active = pathname === item.to;
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      aria-label={item.label}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex min-h-14 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
+                        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+                      <span className="truncate">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
+          )}
+
         </div>
       </div>
     </div>
