@@ -126,20 +126,33 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {/* Main column */}
         <div className="min-w-0 flex-1">
-          <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/85 px-4 backdrop-blur-md md:px-8">
-            {/* Mobile brand */}
-            <div className="flex items-center gap-2.5 md:hidden">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-crimson">
-                <Droplet className="h-4 w-4 fill-white text-white" strokeWidth={2.5} />
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-border bg-background/85 px-3 backdrop-blur-md md:px-8">
+            <div className="flex min-w-0 items-center gap-2">
+              {/* Back button */}
+              <button
+                onClick={() => (canGoBack ? router.history.back() : navigate({ to: "/" }))}
+                className="inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Back</span>
+              </button>
+
+              {/* Mobile brand */}
+              <div className="flex items-center gap-2 md:hidden">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-crimson">
+                  <Droplet className="h-4 w-4 fill-white text-white" strokeWidth={2.5} />
+                </div>
+                <span className="display truncate font-bold">BloodBridge</span>
               </div>
-              <span className="display font-bold">BloodBridge</span>
+
+              <div className="hidden md:block">
+                <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                  {roleLabel} · {new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+                </div>
+              </div>
             </div>
 
-            <div className="hidden md:block">
-              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
-                {roleLabel} · {new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
-              </div>
-            </div>
 
             <div className="flex items-center gap-1.5">
               <DropdownMenu>
