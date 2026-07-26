@@ -107,7 +107,8 @@ function HospitalDashboard() {
           <Button asChild variant="link" className="text-primary"><Link to="/hospital/new-request">Post your first request →</Link></Button>
         </div>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid max-h-[560px] gap-3 overflow-y-auto rounded-2xl pr-1 [scrollbar-width:thin]">
+
           {myRequests.map((r) => {
             const accepted = r.responses.filter((x) => x.status === "accepted").length;
             return (
