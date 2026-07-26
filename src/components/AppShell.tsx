@@ -248,17 +248,26 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <div className="mx-auto flex max-w-md items-stretch justify-around">
                 {navItems.map((item) => {
-                  const active = pathname === item.to;
+                  const active = !!item.to && pathname === item.to;
                   const Icon = item.icon;
+                  const cls = `flex min-h-14 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
+                    active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`;
+                  if (item.onClick) {
+                    return (
+                      <button key={item.label} onClick={item.onClick} aria-label={item.label} className={cls}>
+                        <Icon className="h-5 w-5" strokeWidth={2} />
+                        <span className="truncate">{item.label}</span>
+                      </button>
+                    );
+                  }
                   return (
                     <Link
-                      key={item.to}
-                      to={item.to}
+                      key={item.to!}
+                      to={item.to!}
                       aria-label={item.label}
                       aria-current={active ? "page" : undefined}
-                      className={`flex min-h-14 min-w-14 flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2 text-[10px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset ${
-                        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                      }`}
+                      className={cls}
                     >
                       <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
                       <span className="truncate">{item.label}</span>
