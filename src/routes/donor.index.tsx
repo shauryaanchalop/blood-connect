@@ -63,7 +63,12 @@ function DonorDashboard() {
       smsShownRef.current = true;
     }, 900);
     return () => clearTimeout(timer);
-  }, [donor.userId, donor.name, donor.reminderEnabled, donor.donationCount, eligible, daysToEligible, notify]);
+  }, [donor, eligible, daysToEligible, notify]);
+
+  if (!user) return <Navigate to="/" />;
+  if (user.role !== "donor") return <Navigate to="/" />;
+  if (!donor) return <Navigate to="/" />;
+
 
   // AI-ranked matches (all cities, then sort)
   const scored = requests
