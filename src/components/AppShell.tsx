@@ -165,7 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex min-w-0 items-center gap-2">
               {/* Back button */}
               <button
-                onClick={() => (canGoBack ? router.history.back() : navigate({ to: "/" }))}
+                onClick={goBack}
                 className="inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-full border border-border bg-card px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:h-9"
                 aria-label="Go back"
               >
