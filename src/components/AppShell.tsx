@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const canGoBack = typeof window !== "undefined" && window.history.length > 1;
 
   useEffect(() => {
-    if (i18n.language !== lang) i18n.changeLanguage(lang);
+    if (typeof i18n?.changeLanguage === "function" && i18n.language !== lang) i18n.changeLanguage(lang);
   }, [lang, i18n]);
 
   const unread = user ? notifications.filter((n) => n.userId === user.id && !n.read).length : 0;
