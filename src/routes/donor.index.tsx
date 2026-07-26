@@ -213,6 +213,9 @@ function DonorDashboard() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => setSelected(r)} className="rounded-full border border-border/60" aria-label="See why this matches you">
+                      <Info className="mr-1 h-3.5 w-3.5" /> Why match?
+                    </Button>
                     {mine ? (
                       mine.status === "accepted" ? (
                         <>
