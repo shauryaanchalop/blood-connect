@@ -34,7 +34,7 @@ function Landing() {
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
 
-  useEffect(() => { if (i18n.language !== lang) i18n.changeLanguage(lang); }, [lang, i18n]);
+  useEffect(() => { if (typeof i18n?.changeLanguage === "function" && i18n.language !== lang) i18n.changeLanguage(lang); }, [lang, i18n]);
   useEffect(() => {
     if (currentUser) {
       navigate({ to: currentUser.role === "donor" ? "/donor" : currentUser.role === "hospital" ? "/hospital" : "/admin" });
