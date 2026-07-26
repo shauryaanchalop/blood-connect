@@ -93,12 +93,12 @@ function RequestDetail() {
   // Build a chronological feed of events
   type FeedEvent = { at: string; kind: "created" | "notified" | "accepted" | "declined" | "fulfilled"; label: string };
   const feed: FeedEvent[] = [
-    { at: req.createdAt, kind: "created", label: `Request broadcast to ${matches.length} compatible donor${matches.length === 1 ? "" : "s"}` },
+    { at: req.createdAt, kind: "created" as const, label: `Request broadcast to ${matches.length} compatible donor${matches.length === 1 ? "" : "s"}` },
     ...responses.map<FeedEvent>((r) => {
       const d = donors.find((x) => x.id === r.donorId);
       return {
         at: r.at,
-        kind: r.status,
+        kind: r.status as FeedEvent["kind"],
         label: `${d?.name ?? "Donor"} ${r.status} · ${d?.bloodType ?? ""}`,
       };
     }),
