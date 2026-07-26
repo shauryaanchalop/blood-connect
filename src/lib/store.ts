@@ -185,6 +185,8 @@ export const useStore = create<State>()(
     (set, get) => ({
       currentUserId: null,
       lang: "en",
+      theme: "light",
+      teamOpen: false,
       users: [],
       donors: [],
       hospitals: [],
@@ -193,6 +195,9 @@ export const useStore = create<State>()(
       notifications: [],
 
       setLang: (l) => set({ lang: l }),
+      setTheme: (t) => set({ theme: t }),
+      toggleTheme: () => set({ theme: get().theme === "dark" ? "light" : "dark" }),
+      setTeamOpen: (o) => set({ teamOpen: o }),
       switchTo: (userId) => set({ currentUserId: userId }),
 
       ensureSeed: () => {
