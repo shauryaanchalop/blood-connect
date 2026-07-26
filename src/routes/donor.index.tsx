@@ -267,6 +267,19 @@ function DonorDashboard() {
           </div>
         </div>
       )}
+
+      {selected && (
+        <CompatibilityModal
+          open={!!selected}
+          onOpenChange={(o) => !o && setSelected(null)}
+          donor={donor}
+          request={selected}
+          hospital={hospitals.find((h) => h.id === selected.hospitalId)!}
+          alreadyResponded={selected.responses.find((x) => x.donorId === donor.id)?.status}
+          onAccept={() => handleRespond(selected.id, "accepted")}
+          onDecline={() => handleRespond(selected.id, "declined")}
+        />
+      )}
     </AppShell>
   );
 }
