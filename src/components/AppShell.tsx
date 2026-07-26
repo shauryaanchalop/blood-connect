@@ -1,4 +1,4 @@
-import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate, useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, type ReactNode } from "react";
 import { useCurrentUser, useStore } from "@/lib/store";
@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet, User as UserIcon, BookOpen,
+  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet, User as UserIcon, BookOpen, ArrowLeft, Users,
 } from "lucide-react";
 import type { Lang } from "@/lib/types";
 
