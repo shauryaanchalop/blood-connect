@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TeamRouteImport } from './routes/team'
 import { Route as EducationRouteImport } from './routes/education'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as HospitalIndexRouteImport } from './routes/hospital.index'
@@ -20,6 +21,11 @@ import { Route as DonorProfileRouteImport } from './routes/donor.profile'
 import { Route as DonorHistoryRouteImport } from './routes/donor.history'
 import { Route as HospitalRequestsIdRouteImport } from './routes/hospital.requests.$id'
 
+const TeamRoute = TeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EducationRoute = EducationRouteImport.update({
   id: '/education',
   path: '/education',
@@ -74,6 +80,7 @@ const HospitalRequestsIdRoute = HospitalRequestsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/education': typeof EducationRoute
+  '/team': typeof TeamRoute
   '/donor/history': typeof DonorHistoryRoute
   '/donor/profile': typeof DonorProfileRoute
   '/donor/register': typeof DonorRegisterRoute
@@ -86,6 +93,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/education': typeof EducationRoute
+  '/team': typeof TeamRoute
   '/donor/history': typeof DonorHistoryRoute
   '/donor/profile': typeof DonorProfileRoute
   '/donor/register': typeof DonorRegisterRoute
@@ -99,6 +107,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/education': typeof EducationRoute
+  '/team': typeof TeamRoute
   '/donor/history': typeof DonorHistoryRoute
   '/donor/profile': typeof DonorProfileRoute
   '/donor/register': typeof DonorRegisterRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/education'
+    | '/team'
     | '/donor/history'
     | '/donor/profile'
     | '/donor/register'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/education'
+    | '/team'
     | '/donor/history'
     | '/donor/profile'
     | '/donor/register'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/education'
+    | '/team'
     | '/donor/history'
     | '/donor/profile'
     | '/donor/register'
@@ -150,6 +162,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EducationRoute: typeof EducationRoute
+  TeamRoute: typeof TeamRoute
   DonorHistoryRoute: typeof DonorHistoryRoute
   DonorProfileRoute: typeof DonorProfileRoute
   DonorRegisterRoute: typeof DonorRegisterRoute
@@ -162,6 +175,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/team': {
+      id: '/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof TeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/education': {
       id: '/education'
       path: '/education'
@@ -238,6 +258,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EducationRoute: EducationRoute,
+  TeamRoute: TeamRoute,
   DonorHistoryRoute: DonorHistoryRoute,
   DonorProfileRoute: DonorProfileRoute,
   DonorRegisterRoute: DonorRegisterRoute,
