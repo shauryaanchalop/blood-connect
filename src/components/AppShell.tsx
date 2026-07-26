@@ -1,7 +1,8 @@
 import { Link, useRouterState, useNavigate, useRouter } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useCurrentUser, useStore } from "@/lib/store";
+import { TeamDialog } from "@/components/TeamDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,22 +10,34 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet, User as UserIcon, BookOpen, ArrowLeft, Users,
+  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet, User as UserIcon, BookOpen, ArrowLeft, Users, Sun, Moon,
 } from "lucide-react";
 import type { Lang } from "@/lib/types";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { i18n, t } = useTranslation();
   const user = useCurrentUser();
-  const { lang, setLang, notifications, markAllRead } = useStore();
+  const { lang, setLang, notifications, markAllRead, theme, toggleTheme, setTeamOpen } = useStore();
   const navigate = useNavigate();
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const canGoBack = typeof window !== "undefined" && window.history.length > 1;
+
+  // Track history length after mount so back button state is correct on hydration.
+  const [historyLen, setHistoryLen] = useState(1);
+  useEffect(() => {
+    setHistoryLen(window.history.length);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof i18n?.changeLanguage === "function" && i18n.language !== lang) i18n.changeLanguage(lang);
   }, [lang, i18n]);
+
+  // Apply theme class to <html>
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") root.classList.add("dark");
+    else root.classList.remove("dark");
+  }, [theme]);
 
   const unread = user ? notifications.filter((n) => n.userId === user.id && !n.read).length : 0;
   const signOut = () => {
@@ -32,7 +45,24 @@ export function AppShell({ children }: { children: ReactNode }) {
     navigate({ to: "/" });
   };
 
-  type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
+  const goBack = () => {
+    // Smart back: prefer real history; otherwise, hop to a sensible parent.
+    if (historyLen > 1) {
+      router.history.back();
+      return;
+    }
+    // Compute a sensible fallback based on the current path.
+    const p = pathname;
+    if (p.startsWith("/donor/")) return navigate({ to: "/donor" });
+    if (p.startsWith("/hospital/requests")) return navigate({ to: "/hospital" });
+    if (p.startsWith("/hospital/")) return navigate({ to: "/hospital" });
+    if (user?.role === "donor") return navigate({ to: "/donor" });
+    if (user?.role === "hospital") return navigate({ to: "/hospital" });
+    if (user?.role === "admin") return navigate({ to: "/admin" });
+    return navigate({ to: "/" });
+  };
+
+  type NavItem = { to?: string; label: string; icon: typeof LayoutDashboard; onClick?: () => void };
   const navItems: NavItem[] =
     user?.role === "donor"
       ? [
@@ -54,8 +84,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         ]
       : [];
 
-  // Team link is available for every signed-in role
-  if (user) navItems.push({ to: "/team", label: "Team", icon: Users });
+  // Team opens the modal instead of navigating
+  if (user) navItems.push({ label: "Team", icon: Users, onClick: () => setTeamOpen(true) });
 
   const roleLabel =
     user?.role === "donor" ? "Donor" : user?.role === "hospital" ? "Hospital" : user?.role === "admin" ? "Admin" : "";
