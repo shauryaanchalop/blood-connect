@@ -228,20 +228,22 @@ function Landing() {
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-3">
-          <Link
-            to="/team"
+          <button
+            type="button"
+            onClick={() => useStore.getState().setTeamOpen(true)}
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             Meet Team Vision AI · Build with Bharat
             <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
+          </button>
           <p className="text-center text-xs text-muted-foreground">
             Prototype. All data lives in your browser — no accounts, no telemetry.
           </p>
         </div>
       </section>
 
+      <TeamDialog />
     </div>
   );
 }
