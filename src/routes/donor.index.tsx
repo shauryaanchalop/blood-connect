@@ -4,6 +4,7 @@ import { useCurrentUser, useStore } from "@/lib/store";
 import { AppShell } from "@/components/AppShell";
 import { UrgencyPill } from "@/components/blood";
 import { BloodCrest, MatchRing, PulseDot, StatCard, CountUp } from "@/components/premium";
+import { MiniMap } from "@/components/MiniMap";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, History, Award, Flame, Droplet, TrendingUp, CheckCircle2 } from "lucide-react";
@@ -88,6 +89,28 @@ function DonorDashboard() {
         <StatCard label="Lives saved" value={<CountUp to={lives} />} sub="Est. WHO × 3" icon={<Award className="h-5 w-5" />} accent="gold" />
         <StatCard label="Donations" value={<CountUp to={donor.donationCount} />} sub={<span className="inline-flex items-center gap-1"><Flame className="h-3 w-3 text-[oklch(0.82_0.14_82)]" /> streak of impact</span>} icon={<Droplet className="h-5 w-5" />} />
       </div>
+
+      {/* Map view of live requests */}
+      {scored.length > 0 && (
+        <div className="mb-8">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Live map</div>
+              <p className="text-sm text-muted-foreground">Hospitals near you with active compatible requests.</p>
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{scored.length} pin{scored.length === 1 ? "" : "s"}</span>
+          </div>
+          <MiniMap
+            pins={scored.slice(0, 8).map(({ r, hospital, dist }) => ({
+              id: r.id,
+              label: hospital.name.split(" ")[0],
+              sub: `${r.bloodType} · ${dist.toFixed(1)} km`,
+              seed: hospital.id + r.id,
+              accent: r.urgency === "critical" ? "primary" : r.urgency === "high" ? "warn" : "muted",
+            }))}
+          />
+        </div>
+      )}
 
       {/* Matches */}
       <div className="mb-4 flex items-center justify-between">
