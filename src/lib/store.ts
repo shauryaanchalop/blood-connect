@@ -19,6 +19,8 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 interface State {
   currentUserId: string | null;
   lang: Lang;
+  theme: "light" | "dark";
+  teamOpen: boolean;
   users: User[];
   donors: Donor[];
   hospitals: Hospital[];
@@ -27,6 +29,9 @@ interface State {
   notifications: Notification[];
 
   setLang: (l: Lang) => void;
+  setTheme: (t: "light" | "dark") => void;
+  toggleTheme: () => void;
+  setTeamOpen: (o: boolean) => void;
   switchTo: (userId: string) => void;
   ensureSeed: () => void;
 
