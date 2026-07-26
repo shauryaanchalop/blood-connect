@@ -34,20 +34,17 @@ function DonorDashboard() {
   const [selected, setSelected] = useState<BloodRequest | null>(null);
   const smsShownRef = useRef(false);
 
-  if (!user) return <Navigate to="/" />;
-  if (user.role !== "donor") return <Navigate to="/" />;
-  const donor = donors.find((d) => d.userId === user.id);
-  if (!donor) return <Navigate to="/" />;
+  const donor = user ? donors.find((d) => d.userId === user.id) : undefined;
 
-  const myDonations = donations.filter((d) => d.donorId === donor.id);
-  const lives = livesSaved(donor.donationCount);
-  const daysSinceLast = daysSince(donor.lastDonation);
+  const myDonations = donor ? donations.filter((d) => d.donorId === donor.id) : [];
+  const lives = donor ? livesSaved(donor.donationCount) : 0;
+  const daysSinceLast = donor ? daysSince(donor.lastDonation) : 0;
   const eligible = daysSinceLast >= 56;
   const daysToEligible = Math.max(56 - daysSinceLast, 0);
 
   // Mock SMS reminders — fire once per session
-  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
+    if (!donor) return;
     if (smsShownRef.current) return;
     if (donor.reminderEnabled === false) return;
     const timer = setTimeout(() => {
@@ -66,7 +63,12 @@ function DonorDashboard() {
       smsShownRef.current = true;
     }, 900);
     return () => clearTimeout(timer);
-  }, [donor.userId, donor.name, donor.reminderEnabled, donor.donationCount, eligible, daysToEligible, notify]);
+  }, [donor, eligible, daysToEligible, notify]);
+
+  if (!user) return <Navigate to="/" />;
+  if (user.role !== "donor") return <Navigate to="/" />;
+  if (!donor) return <Navigate to="/" />;
+
 
   // AI-ranked matches (all cities, then sort)
   const scored = requests
