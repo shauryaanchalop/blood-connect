@@ -2,14 +2,15 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEffect, type ReactNode } from "react";
 import { useCurrentUser, useStore } from "@/lib/store";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Globe, LogOut } from "lucide-react";
+import {
+  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet,
+} from "lucide-react";
 import type { Lang } from "@/lib/types";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -24,122 +25,172 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [lang, i18n]);
 
   const unread = user ? notifications.filter((n) => n.userId === user.id && !n.read).length : 0;
-  const changeLang = (l: Lang) => setLang(l);
   const signOut = () => {
     useStore.getState().switchTo("");
     navigate({ to: "/" });
   };
 
-  const navItems: { to: string; label: string }[] = user?.role === "donor"
-    ? [{ to: "/donor", label: t("nav.dashboard") }, { to: "/donor/history", label: t("nav.history") }]
-    : user?.role === "hospital"
-    ? [{ to: "/hospital", label: t("nav.dashboard") }, { to: "/hospital/new-request", label: t("nav.newRequest") }]
-    : user?.role === "admin"
-    ? [{ to: "/admin", label: t("nav.dashboard") }]
-    : [];
+  type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
+  const navItems: NavItem[] =
+    user?.role === "donor"
+      ? [
+          { to: "/donor", label: t("nav.dashboard"), icon: LayoutDashboard },
+          { to: "/donor/history", label: t("nav.history"), icon: History },
+        ]
+      : user?.role === "hospital"
+      ? [
+          { to: "/hospital", label: t("nav.dashboard"), icon: LayoutDashboard },
+          { to: "/hospital/new-request", label: t("nav.newRequest"), icon: Plus },
+        ]
+      : user?.role === "admin"
+      ? [{ to: "/admin", label: t("nav.dashboard"), icon: LayoutDashboard }]
+      : [];
 
-  const roleLabel = user?.role === "donor" ? "Donor" : user?.role === "hospital" ? "Hospital" : user?.role === "admin" ? "Bureau" : "";
+  const roleLabel =
+    user?.role === "donor" ? "Donor" : user?.role === "hospital" ? "Hospital" : user?.role === "admin" ? "Admin" : "";
+  const initials = user?.name
+    ? user.name.split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase()
+    : "";
 
   return (
-    <div className="min-h-screen">
-      {/* Editorial masthead */}
-      <header className="border-b border-ink/20">
-        {/* Top strip: date + issue + language */}
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2 text-[11px] tracking-wide text-muted-foreground">
-          <span className="num">
-            {(() => {
-              const d = new Date();
-              const M=["January","February","March","April","May","June","July","August","September","October","November","December"];
-              const W=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-              return `${W[d.getDay()]}, ${d.getDate()} ${M[d.getMonth()]} ${d.getFullYear()}`;
-            })()}
-          </span>
-          <span className="hidden sm:inline">Vol. I · Emergency Blood Bureau · No. {new Date().getDate()}</span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 uppercase tracking-[0.2em] hover:text-foreground">
-                <Globe className="h-3 w-3" /> {lang}
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => changeLang("en")}>English</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeLang("hi")}>हिन्दी</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => changeLang("es")}>Español</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
+          <div className="flex items-center gap-2.5 px-6 py-6">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-crimson glow-primary">
+              <Droplet className="h-4.5 w-4.5 fill-white text-white" strokeWidth={2.5} />
+            </div>
+            <div className="leading-tight">
+              <div className="display text-lg font-bold tracking-tight">BloodBridge</div>
+              <div className="text-[10px] uppercase tracking-[0.22em] text-sidebar-foreground/50">AI Emergency</div>
+            </div>
+          </div>
 
-        {/* Wordmark + user chip */}
-        <div className="mx-auto flex max-w-6xl items-end justify-between gap-4 border-t border-ink/20 px-6 py-4">
-          <Link to="/" className="group flex items-baseline gap-3">
-            <span className="serif text-3xl leading-none tracking-tight sm:text-4xl">
-              BloodBridge
-              <span className="ml-0.5 italic text-oxblood">.</span>
-            </span>
-            <span className="hidden text-[10px] uppercase tracking-[0.3em] text-muted-foreground sm:inline">
-              An emergency donor register
-            </span>
-          </Link>
+          <nav className="flex-1 space-y-1 px-3">
+            <div className="px-3 pb-2 pt-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/40">
+              {roleLabel} workspace
+            </div>
+            {navItems.map((item) => {
+              const active = pathname === item.to;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all ${
+                    active
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
-          <div className="flex items-center gap-3">
-            {user && (
-              <>
-                <div className="hidden text-right text-[11px] leading-tight sm:block">
-                  <div className="uppercase tracking-[0.2em] text-muted-foreground">{roleLabel}</div>
-                  <div className="font-medium">{user.name}</div>
+          {user && (
+            <div className="border-t border-sidebar-border p-3">
+              <div className="flex items-center gap-3 rounded-lg px-2 py-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-accent text-sm font-semibold text-sidebar-foreground">
+                  {initials}
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="truncate text-sm font-semibold">{user.name}</div>
+                  <div className="truncate text-[11px] text-sidebar-foreground/50">{roleLabel}</div>
                 </div>
                 <button
-                  className="relative rounded-full p-1.5 hover:bg-ink/5"
+                  className="rounded-md p-1.5 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  onClick={signOut}
+                  aria-label="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </aside>
+
+        {/* Main column */}
+        <div className="min-w-0 flex-1">
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-background/85 px-4 backdrop-blur-md md:px-8">
+            {/* Mobile brand */}
+            <div className="flex items-center gap-2.5 md:hidden">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-crimson">
+                <Droplet className="h-4 w-4 fill-white text-white" strokeWidth={2.5} />
+              </div>
+              <span className="display font-bold">BloodBridge</span>
+            </div>
+
+            <div className="hidden md:block">
+              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                {roleLabel} · {new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground">
+                    <Globe className="h-3.5 w-3.5" /> {lang.toUpperCase()}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setLang("en" as Lang)}>English</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLang("hi" as Lang)}>हिन्दी</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLang("es" as Lang)}>Español</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {user && (
+                <button
+                  className="relative rounded-full border border-border bg-card p-2 hover:text-foreground"
                   onClick={() => markAllRead(user.id)}
                   aria-label="Notifications"
                 >
                   <Bell className="h-4 w-4" />
                   {unread > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-oxblood px-1 text-[9px] font-semibold text-primary-foreground num">
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-crimson px-1 text-[9px] font-bold text-primary-foreground num">
                       {unread}
                     </span>
                   )}
                 </button>
-                <button className="rounded-full p-1.5 hover:bg-ink/5" onClick={signOut} aria-label="Sign out">
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </>
-            )}
-          </div>
+              )}
+
+              {/* Mobile nav */}
+              {navItems.length > 0 && (
+                <div className="flex items-center gap-1 md:hidden">
+                  {navItems.map((item) => {
+                    const active = pathname === item.to;
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        aria-label={item.label}
+                        className={`rounded-full p-2 ${active ? "bg-primary text-primary-foreground" : "border border-border bg-card text-muted-foreground"}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </header>
+
+          <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10">{children}</main>
+
+          <footer className="mx-auto max-w-7xl px-4 py-8 text-[11px] text-muted-foreground md:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-6">
+              <span className="font-medium">BloodBridge · AI Emergency Blood Network</span>
+              <span className="num">© {new Date().getFullYear()}</span>
+            </div>
+          </footer>
         </div>
-
-        {/* Section nav — tab underline */}
-        {navItems.length > 0 && (
-          <nav className="mx-auto flex max-w-6xl items-center gap-6 border-t border-ink/20 px-6 text-[13px]">
-            {navItems.map((item) => {
-              const active = pathname === item.to;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`relative -mb-px py-2.5 tracking-wide transition-colors ${
-                    active
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {item.label}
-                  {active && <span className="absolute inset-x-0 -bottom-px h-0.5 bg-oxblood" />}
-                </Link>
-              );
-            })}
-          </nav>
-        )}
-      </header>
-
-      <main className="mx-auto max-w-6xl px-6 py-10">{children}</main>
-
-      <footer className="mx-auto mt-16 max-w-6xl border-t border-ink/20 px-6 py-6 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span>BloodBridge · Emergency Blood Bureau</span>
-          <span className="num">Est. {new Date().getFullYear()} · Printed digitally</span>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }
