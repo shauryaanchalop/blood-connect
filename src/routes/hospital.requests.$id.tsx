@@ -91,15 +91,16 @@ function RequestDetail() {
   };
 
   // Build a chronological feed of events
-  const feed: { at: string; kind: "created" | "notified" | "accepted" | "declined" | "fulfilled"; label: string }[] = [
+  type FeedEvent = { at: string; kind: "created" | "notified" | "accepted" | "declined" | "fulfilled"; label: string };
+  const feed: FeedEvent[] = [
     { at: req.createdAt, kind: "created", label: `Request broadcast to ${matches.length} compatible donor${matches.length === 1 ? "" : "s"}` },
-    ...responses.map((r) => {
+    ...responses.map<FeedEvent>((r) => {
       const d = donors.find((x) => x.id === r.donorId);
       return {
         at: r.at,
         kind: r.status,
         label: `${d?.name ?? "Donor"} ${r.status} · ${d?.bloodType ?? ""}`,
-      } as const;
+      };
     }),
     ...(req.status === "fulfilled" ? [{ at: new Date().toISOString(), kind: "fulfilled" as const, label: "Request fulfilled" }] : []),
   ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
