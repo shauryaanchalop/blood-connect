@@ -33,6 +33,14 @@ interface State {
   updateDonor: (donorId: string, patch: Partial<Donor>) => void;
   updateHospital: (hospitalId: string, patch: Partial<Hospital>) => void;
 
+  registerDonor: (input: {
+    name: string;
+    bloodType: BloodType;
+    city: string;
+    phone: string;
+    age?: number;
+  }) => { user: User; donor: Donor };
+
   createRequest: (input: {
     hospitalId: string;
     bloodType: BloodType;
@@ -145,6 +153,31 @@ export const useStore = create<State>()(
         set({
           hospitals: get().hospitals.map((h) => (h.id === hospitalId ? { ...h, ...patch } : h)),
         }),
+
+      registerDonor: (input) => {
+        const userId = "u_" + uid();
+        const donorId = "d_" + uid();
+        const user: User = { id: userId, role: "donor", name: input.name };
+        const donor: Donor = {
+          id: donorId,
+          userId,
+          name: input.name,
+          bloodType: input.bloodType,
+          city: input.city,
+          phone: input.phone,
+          lastDonation: null,
+          donationCount: 0,
+          reminderEnabled: true,
+          available: true,
+          age: input.age,
+        };
+        set({
+          users: [...get().users, user],
+          donors: [...get().donors, donor],
+          currentUserId: userId,
+        });
+        return { user, donor };
+      },
 
       createRequest: (input) => {
         const req: BloodRequest = {

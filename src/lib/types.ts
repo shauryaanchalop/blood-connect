@@ -19,6 +19,9 @@ export interface Donor {
   phone: string;
   lastDonation: string | null; // ISO date
   donationCount: number;
+  reminderEnabled?: boolean;
+  available?: boolean;
+  age?: number;
 }
 
 export interface Hospital {

@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet,
+  Bell, Globe, LogOut, LayoutDashboard, History, Plus, Droplet, User as UserIcon, BookOpen,
 } from "lucide-react";
 import type { Lang } from "@/lib/types";
 
@@ -36,14 +36,20 @@ export function AppShell({ children }: { children: ReactNode }) {
       ? [
           { to: "/donor", label: t("nav.dashboard"), icon: LayoutDashboard },
           { to: "/donor/history", label: t("nav.history"), icon: History },
+          { to: "/donor/profile", label: "Profile", icon: UserIcon },
+          { to: "/education", label: "Learn", icon: BookOpen },
         ]
       : user?.role === "hospital"
       ? [
           { to: "/hospital", label: t("nav.dashboard"), icon: LayoutDashboard },
           { to: "/hospital/new-request", label: t("nav.newRequest"), icon: Plus },
+          { to: "/education", label: "Learn", icon: BookOpen },
         ]
       : user?.role === "admin"
-      ? [{ to: "/admin", label: t("nav.dashboard"), icon: LayoutDashboard }]
+      ? [
+          { to: "/admin", label: t("nav.dashboard"), icon: LayoutDashboard },
+          { to: "/education", label: "Learn", icon: BookOpen },
+        ]
       : [];
 
   const roleLabel =

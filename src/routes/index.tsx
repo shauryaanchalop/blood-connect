@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useStore, useCurrentUser } from "@/lib/store";
@@ -104,19 +104,25 @@ function Landing() {
         </p>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <a
-            href="#roles"
+          <Link
+            to="/donor/register"
             className="inline-flex items-center gap-2 rounded-full bg-gradient-crimson px-6 py-3 text-sm font-semibold text-primary-foreground glow-primary transition-transform hover:-translate-y-0.5"
           >
-            Enter the network
+            Become a donor
             <ArrowRight className="h-4 w-4" />
-          </a>
+          </Link>
           <a
-            href="#how"
+            href="#roles"
             className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-accent"
           >
-            How it works
+            Try a demo profile
           </a>
+          <Link
+            to="/education"
+            className="inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Learn about donation →
+          </Link>
         </div>
 
         {/* Stat strip */}
