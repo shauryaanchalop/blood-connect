@@ -1,15 +1,17 @@
 import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { useEffect, useRef, useState } from "react";
 import { useCurrentUser, useStore } from "@/lib/store";
 import { AppShell } from "@/components/AppShell";
 import { UrgencyPill } from "@/components/blood";
 import { BloodCrest, MatchRing, PulseDot, StatCard, CountUp } from "@/components/premium";
 import { MiniMap } from "@/components/MiniMap";
+import { CompatibilityModal } from "@/components/CompatibilityModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Clock, History, Award, Flame, Droplet, TrendingUp, CheckCircle2 } from "lucide-react";
+import { MapPin, Clock, History, Award, Flame, Droplet, TrendingUp, CheckCircle2, Info, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
-import { isCompatible } from "@/lib/types";
+import { isCompatible, type BloodRequest } from "@/lib/types";
 import { matchScore, estimateDistanceKm, eta, livesSaved, daysSince } from "@/lib/ai";
 import { generateCertificatePdf } from "@/lib/certificate";
 
@@ -27,8 +29,10 @@ export const Route = createFileRoute("/donor/")({
 
 function DonorDashboard() {
   const user = useCurrentUser();
-  const { donors, hospitals, requests, donations, respondToRequest, completeDonation } = useStore();
+  const { donors, hospitals, requests, donations, respondToRequest, completeDonation, notify, updateDonor } = useStore();
   const { t } = useTranslation();
+  const [selected, setSelected] = useState<BloodRequest | null>(null);
+  const smsShownRef = useRef(false);
 
   if (!user) return <Navigate to="/" />;
   if (user.role !== "donor") return <Navigate to="/" />;
@@ -39,6 +43,30 @@ function DonorDashboard() {
   const lives = livesSaved(donor.donationCount);
   const daysSinceLast = daysSince(donor.lastDonation);
   const eligible = daysSinceLast >= 56;
+  const daysToEligible = Math.max(56 - daysSinceLast, 0);
+
+  // Mock SMS reminders — fire once per session
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (smsShownRef.current) return;
+    if (donor.reminderEnabled === false) return;
+    const timer = setTimeout(() => {
+      if (!eligible && daysToEligible <= 14 && daysToEligible > 0) {
+        toast.message("📱 SMS reminder", {
+          description: `Hi ${donor.name.split(" ")[0]}, you'll be eligible to donate again in ${daysToEligible} day${daysToEligible === 1 ? "" : "s"}. Reply STOP to opt out.`,
+          duration: 6000,
+        });
+        notify(donor.userId, `SMS: Eligible to donate in ${daysToEligible} days.`);
+      } else if (eligible && donor.donationCount > 0) {
+        toast.message("📱 SMS reminder", {
+          description: `Hi ${donor.name.split(" ")[0]}, you're eligible to donate again. Save a life this week.`,
+          duration: 6000,
+        });
+      }
+      smsShownRef.current = true;
+    }, 900);
+    return () => clearTimeout(timer);
+  }, [donor.userId, donor.name, donor.reminderEnabled, donor.donationCount, eligible, daysToEligible, notify]);
 
   // AI-ranked matches (all cities, then sort)
   const scored = requests
@@ -51,18 +79,35 @@ function DonorDashboard() {
 
   const handleRespond = (rid: string, status: "accepted" | "declined") => {
     respondToRequest(rid, donor.id, status);
-    toast[status === "accepted" ? "success" : "info"](
-      status === "accepted" ? "You're on the way — hospital notified." : "Response recorded.",
-    );
+    if (status === "accepted") {
+      const req = requests.find((r) => r.id === rid);
+      const hosp = req && hospitals.find((h) => h.id === req.hospitalId);
+      toast.success("You're on the way — hospital notified.", {
+        description: hosp ? `📱 SMS sent to ${hosp.name}: "${donor.name} is en route with ${donor.bloodType}."` : undefined,
+      });
+    } else {
+      toast.info("Response recorded.");
+    }
+    setSelected(null);
   };
 
   const handleComplete = (rid: string) => {
     const donation = completeDonation(rid, donor.id);
     if (donation) {
-      toast.success(`Certificate ${donation.certificateId} ready.`);
+      toast.success(`Certificate ${donation.certificateId} ready.`, { description: "Downloading your PDF…" });
       const hospital = hospitals.find((h) => h.id === donation.hospitalId);
       generateCertificatePdf({ donation, donorName: donor.name, hospitalName: hospital?.name ?? "" });
     }
+  };
+
+  const toggleAvailability = () => {
+    const next = !(donor.available !== false);
+    updateDonor(donor.id, { available: next });
+    toast.message("📱 SMS reminder", {
+      description: next
+        ? `Availability turned ON. We'll SMS you the moment a compatible request opens near ${donor.city}.`
+        : "Availability paused. You won't receive SMS alerts until you turn it back on.",
+    });
   };
 
   return (
@@ -80,8 +125,20 @@ function DonorDashboard() {
                 <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{donor.city}</span>
                 <span className="inline-flex items-center gap-1">
                   <span className={`inline-flex h-1.5 w-1.5 rounded-full ${eligible ? "bg-[oklch(0.72_0.12_140)]" : "bg-[oklch(0.82_0.16_80)]"}`} />
-                  {eligible ? "Eligible to donate" : `Eligible in ${Math.max(56 - daysSinceLast, 0)}d`}
+                  {eligible ? "Eligible to donate" : `Eligible in ${daysToEligible}d`}
                 </span>
+                <button
+                  onClick={toggleAvailability}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    donor.available !== false
+                      ? "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+                      : "border-border bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                  aria-pressed={donor.available !== false}
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  SMS {donor.available !== false ? "on" : "off"}
+                </button>
               </div>
             </div>
           </div>
@@ -156,6 +213,9 @@ function DonorDashboard() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => setSelected(r)} className="rounded-full border border-border/60" aria-label="See why this matches you">
+                      <Info className="mr-1 h-3.5 w-3.5" /> Why match?
+                    </Button>
                     {mine ? (
                       mine.status === "accepted" ? (
                         <>
@@ -206,6 +266,19 @@ function DonorDashboard() {
             ))}
           </div>
         </div>
+      )}
+
+      {selected && (
+        <CompatibilityModal
+          open={!!selected}
+          onOpenChange={(o) => !o && setSelected(null)}
+          donor={donor}
+          request={selected}
+          hospital={hospitals.find((h) => h.id === selected.hospitalId)!}
+          alreadyResponded={selected.responses.find((x) => x.donorId === donor.id)?.status}
+          onAccept={() => handleRespond(selected.id, "accepted")}
+          onDecline={() => handleRespond(selected.id, "declined")}
+        />
       )}
     </AppShell>
   );

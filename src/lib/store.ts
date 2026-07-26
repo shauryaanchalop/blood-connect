@@ -47,6 +47,11 @@ interface State {
     units: number;
     urgency: Urgency;
     note?: string;
+    patientInfo?: string;
+    contactName?: string;
+    contactPhone?: string;
+    deadlineMins?: number;
+    locationOverride?: string;
   }) => BloodRequest;
   respondToRequest: (
     requestId: string,
@@ -187,6 +192,11 @@ export const useStore = create<State>()(
           units: input.units,
           urgency: input.urgency,
           note: input.note,
+          patientInfo: input.patientInfo,
+          contactName: input.contactName,
+          contactPhone: input.contactPhone,
+          deadlineMins: input.deadlineMins,
+          locationOverride: input.locationOverride,
           status: "open",
           createdAt: new Date().toISOString(),
           responses: [],
