@@ -49,6 +49,12 @@ export interface BloodRequest {
   createdAt: string;
   note?: string;
   responses: RequestResponse[];
+  // Emergency intake fields
+  patientInfo?: string;      // e.g. "45 y/o male, trauma"
+  contactName?: string;      // ward nurse / on-call doctor
+  contactPhone?: string;
+  deadlineMins?: number;     // needed within N minutes
+  locationOverride?: string; // specific ward / address
 }
 
 export interface Donation {
