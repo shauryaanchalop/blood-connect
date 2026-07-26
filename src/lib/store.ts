@@ -346,7 +346,7 @@ export const useStore = create<State>()(
           ),
         }),
     }),
-    { name: "bloodbridge-store-v1" },
+    { name: "bloodbridge-store-v2" },
   ),
 );
 
